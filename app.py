@@ -32,7 +32,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = config.SQLALCHEMY_DATABASE_URI
 #----------------------------------------------------------------------------#
 
 class Venue(db.Model):
-    __tablename__ = 'venues'
+    __tablename__ = 'venue'
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String, nullable=False)
@@ -54,7 +54,7 @@ class Venue(db.Model):
     def __repr__(self):
       return f"<Venue {self.id} name: {self.name}>"
 class Artist(db.Model):
-    __tablename__ = 'artists'
+    __tablename__ = 'artist'
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String, nullable=False)
@@ -73,11 +73,11 @@ class Artist(db.Model):
 
 # TODO Implement Show and Artist models, and complete all model relationships and properties, as a database migration.
 class Show(db.Model):
-  __tablename__ = 'shows'
+  __tablename__ = 'show'
 
   id = db.Column(db.Integer, primary_key=True)
-  artist_id = db.Column(db.Integer, db.ForeignKey('artists.id'), nullable=False)
-  venue_id = db.Column(db.Integer, db.ForeignKey('venues.id'), nullable=False)
+  artist_id = db.Column(db.Integer, db.ForeignKey('artist.id'), nullable=False)
+  venue_id = db.Column(db.Integer, db.ForeignKey('venue.id'), nullable=False)
   start_time = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 
   def __repr__(self):
@@ -176,8 +176,8 @@ def show_venue(venue_id):
     data = {
           "artist_id": show.artist_id,
           "artist_name": show.artist.name,
-           "artist_image_link": show.artist.image_link,
-           "start_time": format_datetime(str(show.start_time))
+          "artist_image_link": show.artist.image_link,
+          "start_time": format_datetime(str(show.start_time))
         }
     if show.start_time > current_time:
       upcoming_shows.append(data)
