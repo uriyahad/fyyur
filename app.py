@@ -137,7 +137,7 @@ def venues():
       "num_upcoming_shows": 0,
     }]
   }]
-
+  
     area_object = []
     print("\n\nReturning Venue list:\n")
     try:
@@ -184,15 +184,15 @@ def search_venues():
     
     search = request.form.get('search_term', '')
     print("\n\nSearch on venues performed:\n\n", search)
-    response = {}
+    s_response = {}
     try:
         venue_search = db.session.query(Venue).filter(
             Venue.name.ilike("%"+search+"%")).all()
         print(venue_search)
-        response['count'] = len(venue_search)
-        response['data'] = []
+        s_response['count'] = len(venue_search)
+        s_response['data'] = []
         for venue in venue_search:
-            response['data'].append({
+            s_response['data'].append({
                 'id': venue.id,
                 'name': venue.name,
                 "num_upcoming_shows": Show.query.with_entities(func.count(Show.id)).filter(Show.venue_id == venue.id).filter(Show.start_time > datetime.now()).all()[0][0]
@@ -283,7 +283,7 @@ def show_venue(venue_id):
     "past_shows_count": 1,
     "upcoming_shows_count": 1,
   }
-    
+  
   print("\n\nVenue page hit:\n\n", venue_id)
   data = {}
   try:
@@ -328,7 +328,7 @@ def show_venue(venue_id):
         print(sys.exc_info())
   data = list(filter(lambda d: d['id'] == venue_id, [data1, data2, data3]))[0]
   return render_template('pages/show_venue.html', venue=data)
-
+  
 #  Create Venue
 #  ----------------------------------------------------------------
 
@@ -382,10 +382,25 @@ def create_venue_submission():
 def delete_venue(venue_id):
   # TODO: Complete this endpoint for taking a venue_id, and using
   # SQLAlchemy ORM to delete a record. Handle cases where the session commit could fail.
+  try:
+    # Get venue by ID
+    venue = Venue.query.get(venue_id)
+    venue_name = venue.name
 
+    db.session.delete(venue)
+    db.session.commit()
+
+    flash('Venue ' + venue_name + ' was deleted')
+  except:
+    flash(' an error occured and Venue ' + venue_name + ' was not deleted')
+    db.session.rollback()
+  finally:
+    db.session.close()
+
+  return redirect(url_for('index'))
   # BONUS CHALLENGE: Implement a button to delete a Venue on a Venue Page, have it so that
   # clicking that button delete it from the db then redirect the user to the homepage
-  return None
+
 
 #  Artists
 #  ----------------------------------------------------------------
@@ -404,18 +419,18 @@ def artists():
     "name": "The Wild Sax Band",
   }]
     
-  data = []
+  new_data = data
   try:
         artists = Artist.query.with_entities(Artist.id, Artist.name).all()
         for a in artists:
-            data.append({
+            new_data.append({
                 'id': a.id,
                 'name': a.name
             })
-        print(data)
+        print(new_data)
   except:
         print(sys.exc_info())
-  return render_template('pages/artists.html', artists=data)
+  return render_template('pages/artists.html', artists=new_data)
 
 @app.route('/artists/search', methods=['POST'])
 def search_artists():
@@ -434,15 +449,15 @@ def search_artists():
     
     search_term = request.form.get('search_term', '')
     print("\n\nSearch on artists:\n\n", search_term)
-    response = {}
+    new_response = response
     try:
         artists = Artist.query.filter(
             Artist.name.ilike("%"+search_term+"%")).all()
         print(artists)
-        response['count'] = len(artists)
-        response['data'] = []
+        new_response['count'] = len(artists)
+        new_response['data'] = []
         for artist in artists:
-            response['data'].append({
+            new_response['data'].append({
                 "id": artist.id,
                 "name": artist.name,
                 "num_upcoming_shows": Artist.query.with_entities(func.count(Show.id)).filter(Show.artist_id == artist.id).filter(Show.start_time > datetime.now()).all()[0][0]
@@ -456,7 +471,6 @@ def search_artists():
 def show_artist(artist_id):
   # shows the artist page with the given artist_id
   # TODO: replace with real artist data from the artist table, using artist_id
-    
   data1={
     "id": 4,
     "name": "Guns N Petals",
@@ -529,7 +543,7 @@ def show_artist(artist_id):
     "upcoming_shows_count": 3,
   }    
     
-  data = {}
+  data = data1, data2, data3
   print("\n\nArtist page hit:\n\n")
   try:
         artist = Artist.query.get(artist_id)
@@ -798,13 +812,13 @@ def shows():
     "start_time": "2035-04-15T20:00:00.000Z"
   }]
 
-    data = []
+    new_data = data
     print("\n\nReturning list of shows:\n\n")
     try:
         shows = db.session.query(Show).join(Artist).join(Venue).all()
         for show in shows:
             print(show)
-            data.append({
+            new_data.append({
                 "venue_id": show.venue_id,
                 "venue_name": show.venue.name,
                 "artist_id": show.artist_id,
@@ -816,7 +830,7 @@ def shows():
         #     print(d)
     except:
         print(sys.exc_info())
-    return render_template('pages/shows.html', shows=data)
+    return render_template('pages/shows.html', shows=new_data)
 
 @app.route('/shows/create')
 def create_shows():
